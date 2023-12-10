@@ -1,0 +1,24 @@
+2023-09-08 14:43:32.644658: I tensorflow/core/util/port.cc:110] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2023-09-08 14:43:32.731136: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-09-08 14:43:33.911354: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+            cell_id  day  donor cell_type technology
+0      45006fe3e4c8    2  32606       HSC    citeseq
+1      d02759a80ba2    2  32606       HSC    citeseq
+2      c016c6b0efa5    2  32606      EryP    citeseq
+3      ba7f733a4f75    2  32606      NeuP    citeseq
+4      fbcf2443ffb2    2  32606      EryP    citeseq
+...             ...  ...    ...       ...        ...
+70983  650ee456f0f3    4  31800       HSC    citeseq
+70984  cc506e7707f5    4  31800      EryP    citeseq
+70985  a91f1b55a520    4  31800      EryP    citeseq
+70986  3a9882c98205    4  31800      MasP    citeseq
+70987  c91b6b2ccd3d    4  31800      EryP    citeseq
+
+[70988 rows x 5 columns]
+Traceback (most recent call last):
+  File "/home/djj/bio/solution/code/cite_fe_process_gru.py", line 64, in <module>
+    train_cite_inputs_raw = pd.read_hdf(input_path+'train_cite_inputs_raw.h5').reset_index(drop=True)
+  File "/home/djj/anaconda3/lib/python3.10/site-packages/pandas/io/pytables.py", line 414, in read_hdf
+    raise FileNotFoundError(f"File {path_or_buf} does not exist")
+FileNotFoundError: File /home/djj/bio/solution/data/open-problems-multimodal/open-problems-multimodal/train_cite_inputs_raw.h5 does not exist

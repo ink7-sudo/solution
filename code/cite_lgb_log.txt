@@ -1,0 +1,26 @@
+(70988, 876)
+(70988, 140)
+cite_test_x.shape(48663, 876)
+11    10149
+15     9511
+7      8485
+9      8395
+6      7643
+13     7476
+14     6999
+10     6259
+5      6071
+Name: comb, dtype: int64
+k fold : 0 mse: 2.3568502588905207 corrscore : 0.8746407103961588 x_train.shape : (60839, 876)   x_val.shape : (10149, 876)
+k fold : 1 mse: 2.0125412378203302 corrscore : 0.8961553835545106 x_train.shape : (61477, 876)   x_val.shape : (9511, 876)
+k fold : 2 mse: 3.117320465759375 corrscore : 0.8968743426809253 x_train.shape : (62503, 876)   x_val.shape : (8485, 876)
+k fold : 3 mse: 1.9393124981984864 corrscore : 0.8978519454675056 x_train.shape : (62593, 876)   x_val.shape : (8395, 876)
+k fold : 4 mse: 3.2352037653203176 corrscore : 0.8934248279699553 x_train.shape : (63345, 876)   x_val.shape : (7643, 876)
+k fold : 5 mse: 2.1626532180087548 corrscore : 0.8877786130086788 x_train.shape : (63512, 876)   x_val.shape : (7476, 876)
+k fold : 6 mse: 2.31577867903165 corrscore : 0.906368498537183 x_train.shape : (63989, 876)   x_val.shape : (6999, 876)
+k fold : 7 mse: 2.3546989018886397 corrscore : 0.9034721783924243 x_train.shape : (64729, 876)   x_val.shape : (6259, 876)
+k fold : 8 mse: 4.335690816385829 corrscore : 0.8961832008215375 x_train.shape : (64917, 876)   x_val.shape : (6071, 876)
+(48663, 140)
+ self._g_read_slice(startl, stopl, stepl, nparr)
+KeyboardInterrupt
+Closing remaining open files:/home/djj/bio/solution/data/open-problems-multimodal/open-problems-multimodal/train_cite_inputs.h5...done

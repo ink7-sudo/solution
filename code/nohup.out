@@ -1,0 +1,20 @@
+Constant cols: 1194
+important cols: 364
+Original X shape: (70988, 20856) 5.515 GByte
+Original Xt shape: (48663, 20856) 3.781 GByte
+Shape of both before SVD: (119651, 20856)
+Shape of both after SVD:  (119651, 512)
+Reduced X shape:  (70988, 876)   0.232 GByte
+Reduced Xt shape: (48663, 876)   0.159 GByte
+Traceback (most recent call last):
+  File "/home/djj/bio/solution/code/cite_gru.py", line 7, in <module>
+    from tensorflow.keras.utils import plot_model
+ModuleNotFoundError: No module named 'tensorflow'
+Traceback (most recent call last):
+  File "/home/djj/bio/solution/code/cite_gru.py", line 7, in <module>
+    from tensorflow.keras.utils import plot_model
+ModuleNotFoundError: No module named 'tensorflow'
+Traceback (most recent call last):
+  File "/home/djj/bio/solution/code/cite_gru.py", line 7, in <module>
+    from tensorflow.keras.utils import plot_model
+ModuleNotFoundError: No module named 'tensorflow'
