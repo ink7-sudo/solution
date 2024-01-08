@@ -1,0 +1,6 @@
+/home/dujunjia/bio/solution/data/open-problems-multimodal/cite_day4_test.h5
+Constant cols: 1194
+important cols: 364
+Original X shape: (42843, 20856) 3.329 GByte
+Original Xt shape: (28145, 20856) 2.187 GByte
+Shape of both before SVD: (70988, 20856)
