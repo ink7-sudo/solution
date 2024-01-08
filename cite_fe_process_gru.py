@@ -21,35 +21,35 @@ input_path = settings['input_path']
 feature_path = settings['features_path']
 
 # save transformed cite inputs to csr_matrix and id list
-train_cite_inputs = pd.read_hdf(input_path+'train_cite_inputs.h5').reset_index(drop=True)
+train_cite_inputs = pd.read_hdf(input_path+'cite_day23_train.h5').reset_index(drop=True)
 metadata = pd.read_csv(input_path+'metadata.csv')
 
 
 # id list
-train_cite_inputs_id = pd.read_hdf(input_path+'train_cite_inputs.h5').reset_index()[['cell_id']]
+train_cite_inputs_id = pd.read_hdf(input_path+'cite_day23_train.h5').reset_index()[['cell_id']]
 train_cite_inputs_id = train_cite_inputs_id.merge(metadata,on=['cell_id'],how='left')
 train_cite_inputs_id.to_feather(feature_path+'train_cite_inputs_id.feather')
 
 # csr_matrix
 train_cite_inputs_sparse = csr_matrix(train_cite_inputs.to_numpy())
-save_npz(feature_path+"train_cite_inputs_sparse.npz", train_cite_inputs_sparse)
+save_npz(feature_path+"day4_train_cite_inputs_sparse.npz", train_cite_inputs_sparse)
 
 
 
-test_cite_inputs = pd.read_hdf(input_path+'test_cite_inputs.h5').reset_index(drop=True)
+test_cite_inputs = pd.read_hdf(input_path+'cite_day4_test.h5').reset_index(drop=True)
 
 # id list
-test_cite_inputs_id = pd.read_hdf(input_path+'test_cite_inputs.h5').reset_index()[['cell_id']]
+test_cite_inputs_id = pd.read_hdf(input_path+'cite_day4_test.h5').reset_index()[['cell_id']]
 test_cite_inputs_id = test_cite_inputs_id.merge(metadata,on=['cell_id'],how='left')
 test_cite_inputs_id.to_feather(feature_path+'test_cite_inputs_id.feather')
 
 # csr_matrix
 test_cite_inputs_sparse = csr_matrix(test_cite_inputs.to_numpy())
-save_npz(feature_path+"test_cite_inputs_sparse.npz", test_cite_inputs_sparse)
+save_npz(feature_path+"day4_test_cite_inputs_sparse.npz", test_cite_inputs_sparse)
 
 
 cite_inputs_sparse = vstack([train_cite_inputs_sparse,test_cite_inputs_sparse])
-save_npz(feature_path+"cite_inputs_sparse.npz", cite_inputs_sparse)
+save_npz(feature_path+"day4_cite_inputs_sparse.npz", cite_inputs_sparse)
 
 
 # cite_inputs_sparse
@@ -58,14 +58,14 @@ gc.collect()
 
 
 # save raw count cite inputs to csr_matrix 
-train_cite_inputs_raw = pd.read_hdf(input_path+'train_cite_inputs_raw.h5').reset_index(drop=True)
+train_cite_inputs_raw = pd.read_hdf(input_path+'train_cite_day23_inputs_raw.h5').reset_index(drop=True)
 train_cite_inputs_raw_sparse = csr_matrix(train_cite_inputs_raw.to_numpy())
 
-test_cite_inputs_raw = pd.read_hdf(input_path+'test_cite_inputs_raw.h5').reset_index(drop=True)
+test_cite_inputs_raw = pd.read_hdf(input_path+'test_cite_day4_inputs_raw.h5').reset_index(drop=True)
 test_cite_inputs_raw_sparse = csr_matrix(test_cite_inputs_raw.to_numpy())
 
 cite_inputs_raw_sparse = vstack([train_cite_inputs_raw_sparse,test_cite_inputs_raw_sparse])
-save_npz(feature_path+"cite_inputs_raw_sparse.npz", cite_inputs_raw_sparse)
+save_npz(feature_path+"day4_cite_inputs_raw_sparse.npz", cite_inputs_raw_sparse)
 
 
 # cite_inputs_raw_sparse
@@ -74,8 +74,8 @@ gc.collect()
 
 
 # # save target to numpy
-train_cite_targets = pd.read_hdf(input_path+'train_cite_targets.h5').reset_index(drop=True)
-np.save(feature_path+'train_cite_targets.npy', train_cite_targets)
+train_cite_targets = pd.read_hdf(input_path+'cite_day23_target.h5').reset_index(drop=True)
+np.save(feature_path+'day4_train_cite_targets.npy', train_cite_targets)
 
 
 del train_cite_targets
@@ -83,8 +83,8 @@ gc.collect()
 
 
 # # centered log ratio(clr) for raw count
-train_rna_df = pd.read_hdf(input_path+'train_cite_inputs_raw.h5')
-test_rna_df = pd.read_hdf(input_path+'test_cite_inputs_raw.h5')
+train_rna_df = pd.read_hdf(input_path+'train_cite_day23_inputs_raw.h5')
+test_rna_df = pd.read_hdf(input_path+'test_cite_day4_inputs_raw.h5')
 rna_df = pd.concat([train_rna_df,test_rna_df])
 rna = AnnData(csr_matrix(rna_df))
 rna.obs_names = rna_df.index.values  
@@ -94,7 +94,7 @@ rna.var_names = rna_df.columns.values
 pt.pp.clr(rna)
 
 cite_inputs_clr_sparse = rna.X
-save_npz(feature_path+'cite_inputs_clr_sparse.npz', cite_inputs_clr_sparse)
+save_npz(feature_path+'day4_cite_inputs_clr_sparse.npz', cite_inputs_clr_sparse)
 
 
 del train_rna_df,test_rna_df,rna_df,rna,cite_inputs_clr_sparse
@@ -106,7 +106,7 @@ cite_inputs_clr_sparse = load_npz(feature_path+"cite_inputs_clr_sparse.npz")
 print ('cite_inputs_clr_sparse',cite_inputs_clr_sparse.shape)
 tsvd = TruncatedSVD(n_components=200, algorithm='arpack')
 cite_inputs_svd = tsvd.fit_transform(cite_inputs_clr_sparse)
-np.save(feature_path+'cite_inputs_svd_clr_200.npy', cite_inputs_svd)
+np.save(feature_path+'day4_cite_inputs_svd_clr_200.npy', cite_inputs_svd)
 
 
 del cite_inputs_clr_sparse,tsvd,cite_inputs_svd
@@ -118,8 +118,8 @@ gc.collect()
 
 
 print('load raw')
-train_cite_inputs_raw = pd.read_hdf(input_path+'train_cite_inputs_raw.h5').reset_index()
-test_cite_inputs_raw = pd.read_hdf(input_path+'test_cite_inputs_raw.h5').reset_index()
+train_cite_inputs_raw = pd.read_hdf(input_path+'train_cite_day23_inputs_raw.h5').reset_index()
+test_cite_inputs_raw = pd.read_hdf(input_path+'test_cite_day4_inputs_raw.h5').reset_index()
 cite_inputs_raw = pd.concat([train_cite_inputs_raw, test_cite_inputs_raw]).reset_index(drop=True)
 
 del train_cite_inputs_raw,test_cite_inputs_raw
@@ -175,7 +175,7 @@ del cite_inputs_normalization,cite_inputs_raw_day_median,cite_inputs_raw_day
 gc.collect()
 
 
-np.save(feature_path+'cite_inputs_final_normalization.npy', cite_inputs_final_normalization)
+np.save(feature_path+'day4_cite_inputs_final_normalization.npy', cite_inputs_final_normalization)
 
 
 # ### dimession reduction
@@ -183,7 +183,7 @@ print ('svd')
 cite_inputs_bio_norm = np.load(feature_path+'cite_inputs_final_normalization.npy')
 tsvd = TruncatedSVD(n_components=100, algorithm='arpack')
 cite_inputs_bio_norm_svd = tsvd.fit_transform(cite_inputs_bio_norm)
-np.save(feature_path+'cite_inputs_bio_norm_svd_100.npy', cite_inputs_bio_norm_svd)
+np.save(feature_path+'day4_cite_inputs_bio_norm_svd_100.npy', cite_inputs_bio_norm_svd)
 
 
 from sklearn.decomposition import *   
@@ -194,13 +194,13 @@ print ('PCA')
 pca = PCA(n_components = 64, 
           copy = False, )
 cite_inputs_bio_norm_pca = pca.fit_transform(cite_inputs_bio_norm)
-np.save(feature_path+'cite_inputs_bio_norm_pca_64.npy', cite_inputs_bio_norm_pca)
+np.save(feature_path+'day4_cite_inputs_bio_norm_pca_64.npy', cite_inputs_bio_norm_pca)
 
 
 
 # # correlated and important features selection
 print('load raw')
-train_cite_inputs_raw = pd.read_hdf(input_path+'train_cite_inputs_raw.h5').reset_index()
+train_cite_inputs_raw = pd.read_hdf(input_path+'train_cite_day23_inputs_raw.h5').reset_index()
 
 print('load metadata')
 metadata = pd.read_csv(input_path+'metadata.csv')
@@ -216,11 +216,11 @@ grp_u = sorted(set(grp_all))
 grp_u
 
 
-train_raw = pd.read_hdf(input_path+'train_cite_inputs.h5').astype(np.float16)
+train_raw = pd.read_hdf(input_path+'cite_day23_train.h5').astype(np.float16)
 cols_cite = train_raw.columns
 train_raw = train_raw.values
 
-train_cite_target = pd.read_hdf(input_path+'train_cite_targets.h5').astype(np.float16)
+train_cite_target = pd.read_hdf(input_path+'cite_day23_target.h5').astype(np.float16)
 labels_cite = train_cite_target.columns
 train_cite_target = train_cite_target.values
 train_cite_target -= train_cite_target.mean(axis=1).reshape(-1, 1)
@@ -281,4 +281,4 @@ knowl_feats = ['ENSG00000004468_CD38', 'ENSG00000005844_ITGAL', 'ENSG00000005961
 important_feats = sorted(set(cor_feats+knowl_feats))
 
 cite_inputs_raw_important_feats = cite_inputs_raw[important_feats].values
-np.save(feature_path+'cite_inputs_raw_important_feats.npy', cite_inputs_raw_important_feats)
+np.save(feature_path+'day4_cite_inputs_raw_important_feats.npy', cite_inputs_raw_important_feats)
