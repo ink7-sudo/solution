@@ -3,13 +3,17 @@ import pandas as pd
 import gc
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
 import tensorflow as tf
+import tensorflow_addons as tfa
+tf.config.run_functions_eagerly(True)
 from tensorflow.keras.utils import plot_model
 from keras.layers import Input, Dense, Concatenate
+from sklearn.decomposition import PCA
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 
 DATA_DIR = "/home/dujunjia/bio/solution/data/open-problems-multimodal/"
@@ -25,6 +29,41 @@ cite_prompt = np.load(feature_path+'cite_prompt.npy')
 import torch
 import torch.nn as nn
 import torch.optim as optim
+
+
+
+def cite_mse_model(len_num):
+    
+    #######################  svd  #######################   
+    input_num = tf.keras.Input(shape=(len_num))     
+
+    x = input_num
+    x = tf.keras.layers.Dense(1500,activation ='swish',)(x)    
+    x = tf.keras.layers.GaussianDropout(0.1)(x)   
+    x = tf.keras.layers.Dense(1500,activation ='swish',)(x) 
+    x = tf.keras.layers.GaussianDropout(0.1)(x)   
+    x = tf.keras.layers.Dense(1500,activation ='swish',)(x) 
+    x = tf.keras.layers.GaussianDropout(0.1)(x)    
+    x =  tf.keras.layers.Reshape((1,x.shape[1]))(x)
+    x = tf.keras.layers.Bidirectional(tf.keras.layers.GRU(700, activation='swish',return_sequences=False))(x)
+    x = tf.keras.layers.GaussianDropout(0.1)(x)  
+    
+    output = tf.keras.layers.Dense(140, activation='linear')(x) 
+
+    model = tf.keras.models.Model(input_num, output)
+    
+    lr=0.0005
+    weight_decay = 0.0001
+    
+    opt = tfa.optimizers.AdamW(
+        learning_rate=lr, weight_decay=weight_decay
+    )    
+
+    model.compile(loss=tf.keras.losses.MeanSquaredError(), optimizer=opt,)
+    model.summary()
+    plot_model(model, to_file='model2.png', show_shapes=True)
+    return model
+
 
 def cite_cos_sim_model(len_num):
     
@@ -44,7 +83,7 @@ def cite_cos_sim_model(len_num):
     model = tf.keras.models.Model(input_num, output)
     lr=0.0005
     adam = tf.keras.optimizers.Adam(learning_rate=lr, beta_1=0.9, beta_2=0.999, epsilon=None, )
-    model.compile(loss=tf.keras.losses.KLDivergence(), optimizer=adam,)
+    model.compile(loss=tf.keras.losses.MeanSquaredError(), optimizer=adam,)
     plot_model(model, to_file='model1.png', show_shapes=True)
     return model
 
@@ -74,70 +113,77 @@ class TransformerEncoder(layers.Layer):
 
 # 定义整体模型
 class TemporalPromptGeneratorModel(keras.Model):
-    def __init__(self, d_model, num_heads, ff_dim,  frozen_model):
+    def __init__(self, d_model, num_heads, ff_dim, frozen_model):
         super(TemporalPromptGeneratorModel, self).__init__()
         self.encoder = TransformerEncoder(d_model, num_heads, ff_dim)
-      
-        self.frozen_model = frozen_model  # 添加冻结的模型
+        self.frozen_model = frozen_model  
 
     def call(self, inputs, training):
-        prompts = inputs
+        prompts = inputs[:, -1:, :]
+        output = inputs[:1,-1:, :]
     
-        # 将 prompts 传递给 Transformer 编码器模块
-        encoder_output = self.encoder(prompts, training=training)
+        for i in range(1,inputs.shape[0]):
+            prompts = inputs[:i+1,-1:,:]
+            encoder_output = self.encoder(prompts, training=training)
+            output = tf.concat([output, encoder_output[-1:,:,:]], axis=0)
 
-        batch_size = tf.shape(encoder_output)[0]
-
-# 使用 tf.reshape 将三维张量 reshape 为 (None, 1280) 的二维张量
-        encoder_output = tf.reshape(encoder_output, (batch_size, -1))
-       
-        # 将 Transformer 编码器的输出传递给冻结的模型
-        #frozen_model = self.frozen_model(encoder_output.shape[1])
+        updated_inputs = tf.concat([inputs, output], axis=1)
+        batch_size = tf.shape(updated_inputs )[0]
+        encoder_output = tf.reshape(updated_inputs, (batch_size, -1))
         frozen_output = self.frozen_model(encoder_output )
-
         return frozen_output
 
 # 参数设置
 
 
 
-train_cite_X = np.load(feature_path+'train_cite_X.npy')
-test_cite_X = np.load(feature_path+'test_cite_X.npy')
+train_cite_X = np.load(feature_path+'prompt_train_cite_X.npy')
+test_cite_X = np.load(feature_path+'prompt_test_cite_X.npy')
 
 train_cite_y = np.load(feature_path+'day4_train_cite_targets.npy')  
 cite_prompt = np.load(feature_path+'cite_prompt.npy')
 
 
 
-# 编译模型
-num_samples = 1000
-num_prompts = 10
-prompt_dim = 128
-output_dim = 140
 
-frozen_model = keras.Sequential([
-    layers.Flatten(),
-    layers.Dense(64, activation='relu'),
-    layers.Dense(140, activation='softmax')
-])
 
-x_train = np.random.rand(num_samples, num_prompts, prompt_dim)
-y_train = np.random.rand(num_samples, output_dim)
-
-d_model = 128 # 模型维度
-num_heads = 4   # 注意力头的数量
-ff_dim = 32     # Feedforward层的维度
+d_model = 400 # 模型维度
+num_heads = 16  # 注意力头的数量
+ff_dim = 2    # Feedforward层的维度
 
 
 
-frozen_model.load_weights("/home/dujunjia/bio/solution/cite_cos_model_1.h5")
+frozen_model = cite_cos_sim_model(1600)
+
+
+
 model = TemporalPromptGeneratorModel(d_model, num_heads, ff_dim,frozen_model)
 
 model.compile(optimizer="adam", loss="mse")
-history = model.fit(x_train,y_train,
+history = model.fit(train_cite_X,train_cite_y,
                     batch_size=64,
-                    epochs=1)
+                    epochs=4)
+predictions = model.predict(test_cite_X)
+
+def correlation_score(y_true, y_pred):
+    """Scores the predictions according to the competition rules. 
+    
+    It is assumed that the predictions are not constant.
+    
+    Returns the average of each sample's Pearson correlation coefficient"""
+    if type(y_true) == pd.DataFrame: y_true = y_true.values
+    if type(y_pred) == pd.DataFrame: y_pred = y_pred.values
+    corrsum = 0
+    for i in range(len(y_true)):
+        corrsum += np.corrcoef(y_true[i], y_pred[i])[1, 0]
+    return corrsum / len(y_true)
+
+DATA_DIR = "../data/open-problems-multimodal/"
 
 
+FP_CITE_TEST_TARGETS = os.path.join(DATA_DIR,"cite_day4_target.h5")
+cite_test_y = pd.read_hdf(FP_CITE_TEST_TARGETS).values
+
+print(correlation_score(cite_test_y,predictions))
 
 model.summary()
